@@ -527,7 +527,8 @@ const loveOverlay = document.getElementById("loveOverlay");
 const loveCopy = document.getElementById("loveCopy");
 const leftLoveVideo = document.getElementById("leftLoveVideo");
 const leftSlideshow = document.getElementById("leftSlideshow");
-const leftSlideImg = document.getElementById("leftSlideImg");
+const leftSlideA = document.getElementById("leftSlideA");
+const leftSlideB = document.getElementById("leftSlideB");
 
 let celebrationStarted = false;
 
@@ -540,6 +541,14 @@ if (yesBtn && result) {
     /** @type {number | null} */
     let slideshowTimer = null;
     let slideIdx = 0;
+    let slideSwapToken = 0;
+
+    /** @type {HTMLImageElement | null} */
+    let activeSlideEl = null;
+    /** @type {HTMLImageElement | null} */
+    let inactiveSlideEl = null;
+    /** @type {string} */
+    let activeSlideUrl = "";
 
     function showVideo() {
       if (leftSlideshow) leftSlideshow.hidden = true;
@@ -551,39 +560,94 @@ if (yesBtn && result) {
       if (leftSlideshow) leftSlideshow.hidden = false;
     }
 
-    function setSlide(url) {
-      if (!(leftSlideImg instanceof HTMLImageElement)) return;
-      leftSlideImg.classList.add("is-fading");
-      window.setTimeout(() => {
-        leftSlideImg.src = url;
-      }, 220);
+    function initSlideshowElsIfNeeded() {
+      if (activeSlideEl && inactiveSlideEl) return true;
+      if (!(leftSlideA instanceof HTMLImageElement)) return false;
+      if (!(leftSlideB instanceof HTMLImageElement)) return false;
+      activeSlideEl = leftSlideA;
+      inactiveSlideEl = leftSlideB;
+      activeSlideEl.classList.add("is-active");
+      inactiveSlideEl.classList.remove("is-active");
+      return true;
     }
 
-    function startSlideshow() {
+    /**
+     * Crossfade to a new URL with no blank gap:
+     * - keep current visible
+     * - load next into the hidden layer
+     * - only then swap opacities
+     */
+    function crossfadeTo(url) {
+      if (!initSlideshowElsIfNeeded()) return;
+      if (!activeSlideEl || !inactiveSlideEl) return;
+
+      if (url === activeSlideUrl) return;
+
+      const token = ++slideSwapToken;
+      const nextEl = inactiveSlideEl;
+      const currentEl = activeSlideEl;
+
+      // Prepare next layer hidden; start loading.
+      nextEl.classList.remove("is-active");
+      nextEl.decoding = "async";
+      nextEl.loading = "eager";
+
+      // Wait for the image to decode before swapping, to avoid flashing the background.
+      nextEl.onload = async () => {
+        if (token !== slideSwapToken) return; // stale load
+        await nextEl.decode?.().catch(() => {});
+        // Crossfade.
+        nextEl.classList.add("is-active");
+        currentEl.classList.remove("is-active");
+
+        // Swap roles.
+        activeSlideEl = nextEl;
+        inactiveSlideEl = currentEl;
+        activeSlideUrl = url;
+      };
+      nextEl.onerror = () => {
+        // If a photo fails to load, keep the current one and move on next tick.
+      };
+
+      nextEl.src = url;
+    }
+
+    async function startSlideshow() {
       if (slideshowStarted) return;
       slideshowStarted = true;
 
       if (!slideshowUrls.length) return;
-      showSlideshow();
+      if (!initSlideshowElsIfNeeded()) return;
 
-      if (leftSlideImg instanceof HTMLImageElement) {
-        leftSlideImg.addEventListener(
-          "load",
-          () => {
-            leftSlideImg.classList.remove("is-fading");
-          },
-          { passive: true },
-        );
-      }
-
-      // Kick off first slide.
+      // Preload + paint the first slide BEFORE revealing the slideshow,
+      // so we never show the container background between photos.
       slideIdx = 0;
-      setSlide(slideshowUrls[slideIdx]);
+      const firstUrl = slideshowUrls[slideIdx];
+      const preloadToken = ++slideSwapToken;
+      await new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(null);
+        img.onerror = () => resolve(null);
+        img.src = firstUrl;
+      });
+      if (preloadToken !== slideSwapToken) return;
+
+      if (activeSlideEl) {
+        activeSlideEl.decoding = "async";
+        activeSlideEl.loading = "eager";
+        activeSlideEl.src = firstUrl;
+        await activeSlideEl.decode?.().catch(() => {});
+        activeSlideEl.classList.add("is-active");
+        activeSlideUrl = firstUrl;
+      }
+      if (inactiveSlideEl) inactiveSlideEl.classList.remove("is-active");
+
+      showSlideshow();
 
       // Then advance.
       slideshowTimer = window.setInterval(() => {
         slideIdx = (slideIdx + 1) % slideshowUrls.length;
-        setSlide(slideshowUrls[slideIdx]);
+        crossfadeTo(slideshowUrls[slideIdx]);
       }, 2600);
     }
 
