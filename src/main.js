@@ -396,8 +396,16 @@ const puzzleCard = document.querySelector(".puzzle-card");
 if (puzzleCard) setSizingVarsFromCard(puzzleCard, N);
 
 if (puzzleCard) {
-  const ro = new ResizeObserver(() => setSizingVarsFromCard(puzzleCard, N));
-  ro.observe(puzzleCard);
+  // ResizeObserver is widely supported, but add a small fallback so the layout
+  // still works on older browsers.
+  if (typeof window.ResizeObserver === "function") {
+    const ro = new ResizeObserver(() => setSizingVarsFromCard(puzzleCard, N));
+    ro.observe(puzzleCard);
+  } else {
+    window.addEventListener("resize", () => setSizingVarsFromCard(puzzleCard, N), {
+      passive: true,
+    });
+  }
 }
 
 const puzzleEl = document.getElementById("puzzle");

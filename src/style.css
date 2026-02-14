@@ -1,8 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+/* Avigea (webfont). For maximum robustness you can self-host later. */
+@font-face {
+  font-family: "Avigea";
+  src: url("https://db.onlinewebfonts.com/t/7f5142ad3a1ba0f226eeb9a57cf8fe77.woff2")
+      format("woff2"),
+    url("https://db.onlinewebfonts.com/t/7f5142ad3a1ba0f226eeb9a57cf8fe77.woff")
+      format("woff"),
+    url("https://db.onlinewebfonts.com/t/7f5142ad3a1ba0f226eeb9a57cf8fe77.ttf")
+      format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   --bg: #FCF0E0;
-  --ink: #000;
+  --ink: #2A2A2A;
 
   --card: #69293f;
   --yes: #c33465;
@@ -100,7 +112,7 @@ body.celebrate .love-overlay {
 }
 
 .hand {
-  font-family: "Patrick Hand", ui-rounded, system-ui, -apple-system, Segoe UI, Roboto,
+  font-family: "Avigea", ui-rounded, system-ui, -apple-system, Segoe UI, Roboto,
     "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
 }
 
@@ -302,7 +314,7 @@ body.celebrate .love-overlay {
 }
 
 .pill {
-  font-family: "Patrick Hand", ui-rounded, system-ui, -apple-system, Segoe UI, Roboto,
+  font-family: "Avigea", ui-rounded, system-ui, -apple-system, Segoe UI, Roboto,
     "Helvetica Neue", Arial;
   font-size: clamp(20px, 5.6vw, 24px);
   line-height: 1.379;
