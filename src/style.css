@@ -90,21 +90,34 @@ body.celebrate #app .right {
 
 .love-overlay {
   display: none;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
   position: relative;
   z-index: 60;
-  color: #fff7ec;
-  /* Match "Dear Mariá..." typography */
-  font-size: 36px;
-  line-height: 1.379;
-  padding: 12px 24px;
-  /* no shadow (match reference) */
+  width: 100%;
+  height: auto;
 }
 
 body.celebrate .love-overlay {
   display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.love-copy {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px 24px;
+
+  color: #fff7ec;
+  /* Match "Dear Mariá..." typography */
+  font-size: 36px;
+  line-height: 1.379;
+  background: transparent;
+  text-shadow: none;
 }
 
 [hidden] {
@@ -147,6 +160,8 @@ body.celebrate .love-overlay {
   width: 100%;
   height: 100%;
   padding: var(--inner-pad);
+  display: grid;
+  place-items: center;
 }
 
 .puzzle-board {
@@ -165,6 +180,57 @@ body.celebrate .love-overlay {
   --tile-size: calc(var(--tile) - 1px);
   --gap-size: calc(var(--gap) + var(--gap-bump));
   --step: calc(var(--tile-size) + var(--gap-size));
+}
+
+.left-love-video {
+  display: none;
+  width: var(--board);
+  height: var(--board);
+  border-radius: 12px;
+  object-fit: cover;
+  object-position: center;
+  box-shadow: var(--shadow);
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.left-slideshow {
+  width: var(--board);
+  height: var(--board);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.left-slide-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  opacity: 1;
+  transition: opacity 420ms ease;
+}
+
+.left-slide-img.is-fading {
+  opacity: 0;
+}
+
+/* Final page: swap the left image (puzzle) for the video. */
+body.celebrate .puzzle-board {
+  display: none;
+}
+
+body.celebrate .left-love-video {
+  display: block;
+}
+
+body.celebrate .left-slideshow[hidden] {
+  display: none !important;
+}
+
+body.celebrate .left-slideshow:not([hidden]) {
+  display: block;
 }
 
 .puzzle-full {

@@ -10,6 +10,17 @@
       <section class="puzzle-card" aria-label="Sliding tile puzzle">
         <div class="puzzle-inner">
           <div id="puzzle" class="puzzle-board" role="application" aria-label="Sliding tile game"></div>
+          <video
+            id="leftLoveVideo"
+            class="left-love-video"
+            autoplay
+            muted
+            playsinline
+            preload="auto"
+          ></video>
+          <div id="leftSlideshow" class="left-slideshow" hidden>
+            <img id="leftSlideImg" class="left-slide-img" alt="" />
+          </div>
         </div>
       </section>
 
@@ -33,11 +44,15 @@
           </div>
         </div>
 
-        <div id="loveOverlay" class="love-overlay hand" hidden>
-          I’m so happy you chose me. Você é o meu chroí e o meu tudo. I love you.
+        <div id="loveOverlay" class="love-overlay" hidden>
+          <div id="loveCopy" class="love-copy hand">
+            I’m so happy you chose me. Você é o meu chroí e o meu tudo. I love you.
+          </div>
         </div>
       </section>
     </main>
+
+    <audio id="bgMusic" preload="auto" loop></audio>
 
     <div id="heartsLayer" aria-hidden="true"></div>
 

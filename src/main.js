@@ -1,8 +1,37 @@
 import "./style.css";
 import puzzleFullUrl from "./assets/puzzle-full.png";
 
+// Served from `public/IMG_8016.MOV` (works with Vite base URL / GitHub Pages).
+const loveVideoUrl = `${import.meta.env.BASE_URL}IMG_8016.MOV`;
+
+const slideshowModules = import.meta.glob("./assets/slideshow/*.{png,PNG,jpg,JPG,jpeg,JPEG,webp,WEBP,gif,GIF}", {
+  eager: true,
+  import: "default",
+});
+const slideshowUrls = Object.entries(slideshowModules)
+  .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+  .map(([, url]) => /** @type {string} */ (url));
+
 const N = 3;
 const SHUFFLE_MOVES = 25;
+// ---- Music (MP3) ----
+const bgMusicUrl = `${import.meta.env.BASE_URL}reu-confesso.mp3`;
+const bgMusicEl = document.getElementById("bgMusic");
+let musicStarted = false;
+
+function startMusicOnUserGesture() {
+  if (musicStarted) return;
+  musicStarted = true;
+  if (!(bgMusicEl instanceof HTMLAudioElement)) return;
+
+  bgMusicEl.src = bgMusicUrl;
+  bgMusicEl.loop = true;
+  bgMusicEl.preload = "auto";
+  bgMusicEl.volume = 0.85;
+  // Ensure new src is loaded.
+  bgMusicEl.load();
+  bgMusicEl.play().catch(() => {});
+}
 
 /** @param {number} min @param {number} max */
 function rand(min, max) {
@@ -495,6 +524,10 @@ const noBtn = document.getElementById("noBtn");
 const result = document.getElementById("result");
 const valentinePrompt = document.getElementById("valentinePrompt");
 const loveOverlay = document.getElementById("loveOverlay");
+const loveCopy = document.getElementById("loveCopy");
+const leftLoveVideo = document.getElementById("leftLoveVideo");
+const leftSlideshow = document.getElementById("leftSlideshow");
+const leftSlideImg = document.getElementById("leftSlideImg");
 
 let celebrationStarted = false;
 
@@ -503,13 +536,91 @@ if (yesBtn && result) {
     if (celebrationStarted) return;
     celebrationStarted = true;
 
+    let slideshowStarted = false;
+    /** @type {number | null} */
+    let slideshowTimer = null;
+    let slideIdx = 0;
+
+    function showVideo() {
+      if (leftSlideshow) leftSlideshow.hidden = true;
+      if (leftLoveVideo instanceof HTMLVideoElement) leftLoveVideo.hidden = false;
+    }
+
+    function showSlideshow() {
+      if (leftLoveVideo instanceof HTMLVideoElement) leftLoveVideo.hidden = true;
+      if (leftSlideshow) leftSlideshow.hidden = false;
+    }
+
+    function setSlide(url) {
+      if (!(leftSlideImg instanceof HTMLImageElement)) return;
+      leftSlideImg.classList.add("is-fading");
+      window.setTimeout(() => {
+        leftSlideImg.src = url;
+      }, 220);
+    }
+
+    function startSlideshow() {
+      if (slideshowStarted) return;
+      slideshowStarted = true;
+
+      if (!slideshowUrls.length) return;
+      showSlideshow();
+
+      if (leftSlideImg instanceof HTMLImageElement) {
+        leftSlideImg.addEventListener(
+          "load",
+          () => {
+            leftSlideImg.classList.remove("is-fading");
+          },
+          { passive: true },
+        );
+      }
+
+      // Kick off first slide.
+      slideIdx = 0;
+      setSlide(slideshowUrls[slideIdx]);
+
+      // Then advance.
+      slideshowTimer = window.setInterval(() => {
+        slideIdx = (slideIdx + 1) % slideshowUrls.length;
+        setSlide(slideshowUrls[slideIdx]);
+      }, 2600);
+    }
+
     // Full-screen love mode.
     document.body.classList.add("celebrate");
     if (loveOverlay) loveOverlay.hidden = false;
+    startMusicOnUserGesture();
     const loveText =
       "I’m so happy you chose me. Você é o meu chroí e o meu tudo. I love you.";
+    if (loveCopy) loveCopy.textContent = loveText;
     if (valentinePrompt) valentinePrompt.textContent = loveText;
     result.textContent = loveText;
+
+    if (leftLoveVideo instanceof HTMLVideoElement) {
+      // Autoplay on mobile requires muted + playsInline.
+      showVideo();
+      leftLoveVideo.src = loveVideoUrl;
+      leftLoveVideo.muted = true;
+      leftLoveVideo.volume = 0;
+      leftLoveVideo.loop = false;
+      leftLoveVideo.autoplay = true;
+      leftLoveVideo.playsInline = true;
+      leftLoveVideo.preload = "auto";
+      // Ensure updated src is applied before play.
+      leftLoveVideo.load();
+
+      leftLoveVideo.addEventListener("ended", () => startSlideshow(), { once: true });
+      leftLoveVideo.addEventListener("error", () => startSlideshow(), { once: true });
+
+      leftLoveVideo
+        .play()
+        // Some browsers may still block autoplay; user already clicked, but ignore just in case.
+        .catch(() => {});
+    } else {
+      // If the video element isn't available for any reason, just start the slideshow.
+      startSlideshow();
+    }
 
     // Initial burst from the Yes button (even though it disappears right after).
     const r = yesBtn.getBoundingClientRect();
