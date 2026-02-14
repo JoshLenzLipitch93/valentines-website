@@ -1,0 +1,421 @@
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+
+:root {
+  --bg: #FCF0E0;
+  --ink: #000;
+
+  --card: #69293f;
+  --yes: #c33465;
+  --no: #E3D4BF;
+
+  --shadow: 0px 7px 5px rgba(0, 0, 0, 0.27);
+  --tile-shadow: 0px 5px 6px rgba(0, 0, 0, 0.22);
+
+  /* Figma-derived defaults (desktop) */
+  --card-size: 566px;
+  --card-radius: 10.70168px;
+  --inner-pad: 35.89px;
+
+  --n: 3;
+  --gap: 1px;
+  --tile: 162.89px;
+  --step: calc(var(--tile) + var(--gap));
+  --board: calc(var(--tile) * var(--n) + var(--gap) * (var(--n) - 1));
+  --gap-bump: 1.5px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body.celebrate {
+  animation: bgToLove 520ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+@keyframes bgToLove {
+  0% {
+    background: var(--bg);
+    filter: saturate(1) brightness(1);
+  }
+  55% {
+    background: color-mix(in srgb, #c33465 75%, white 25%);
+    filter: saturate(1.35) brightness(1.05);
+  }
+  100% {
+    background: #c33465;
+    filter: saturate(1.15) brightness(1);
+  }
+}
+
+/* In love mode: keep puzzle left, show only "I love you" on the right. */
+body.celebrate #incompleteMsg {
+  display: none;
+}
+
+body.celebrate #completeUi {
+  display: none !important;
+}
+
+body.celebrate #app .right {
+  justify-content: center;
+  min-height: var(--card-size);
+  height: var(--card-size);
+  align-items: center;
+}
+
+.love-overlay {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  z-index: 60;
+  color: #fff7ec;
+  /* Match "Dear Mariá..." typography */
+  font-size: 36px;
+  line-height: 1.379;
+  padding: 12px 24px;
+  /* no shadow (match reference) */
+}
+
+body.celebrate .love-overlay {
+  display: flex;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.hand {
+  font-family: "Patrick Hand", ui-rounded, system-ui, -apple-system, Segoe UI, Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+.center {
+  text-align: center;
+}
+
+.text-36 {
+  font-size: clamp(26px, 6.8vw, 36px);
+  line-height: 1.379;
+  margin: 0;
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(28px, 8vw, 115px);
+  padding: clamp(20px, 5vh, 48px) clamp(12px, 4vw, 24px);
+}
+
+.puzzle-card {
+  width: var(--card-size);
+  height: var(--card-size);
+  border-radius: var(--card-radius);
+  background: var(--card);
+  flex: 0 0 auto;
+}
+
+.puzzle-inner {
+  width: 100%;
+  height: 100%;
+  padding: var(--inner-pad);
+}
+
+.puzzle-board {
+  width: var(--board);
+  height: var(--board);
+  position: relative;
+  /* Prevent scroll/zoom gestures from stealing swipe moves on mobile. */
+  touch-action: none;
+  border-radius: 12px;
+  overflow: visible;
+  box-shadow: none;
+  transition: box-shadow 520ms cubic-bezier(0.2, 0.9, 0.2, 1);
+
+  /* Allow "merge" animation without JS recalculating sizes. */
+  /* Make tiles 1px smaller, but keep the outer edge flush by redistributing that space into inner gaps. */
+  --tile-size: calc(var(--tile) - 1px);
+  --gap-size: calc(var(--gap) + var(--gap-bump));
+  --step: calc(var(--tile-size) + var(--gap-size));
+}
+
+.puzzle-full {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transform: scale(0.992);
+  filter: blur(0.9px);
+  will-change: opacity, transform, filter;
+  transition:
+    opacity 650ms cubic-bezier(0.2, 0.9, 0.2, 1) 120ms,
+    transform 850ms cubic-bezier(0.16, 1, 0.3, 1) 0ms,
+    filter 850ms ease 0ms;
+}
+
+.puzzle-board.is-complete {
+  /* Collapse the gaps and redistribute the gap space into the tiles. */
+  --gap-size: 0px;
+  --tile-size: calc(var(--board) / var(--n));
+  box-shadow: var(--shadow);
+}
+
+.puzzle-board.is-complete .puzzle-full {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0px);
+}
+
+.tile {
+  position: absolute;
+  width: var(--tile-size);
+  height: var(--tile-size);
+  border: 0;
+  padding: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  z-index: 1;
+  box-shadow: var(--tile-shadow);
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    opacity 220ms ease;
+  will-change: transform;
+
+  /* Crop from one full image so everything aligns perfectly. */
+  background-image: var(--puzzle-img);
+  background-size: var(--board) var(--board);
+  background-position:
+    calc(var(--sc, 0) * var(--step) * -1)
+    calc(var(--sr, 0) * var(--step) * -1);
+  background-repeat: no-repeat;
+}
+
+.puzzle-board.is-complete .tile {
+  pointer-events: none;
+  transition:
+    transform 750ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 520ms ease 220ms;
+  opacity: 0;
+}
+
+.tile:focus-visible {
+  outline: 3px solid rgba(255, 247, 236, 0.9);
+  outline-offset: 2px;
+}
+
+.tile[aria-disabled="true"] {
+  cursor: default;
+}
+
+.right {
+  width: 520px;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--card-size);
+}
+
+.complete-line,
+#completeLine {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 520ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    transform 650ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#proposalGroup {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 520ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    transform 520ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    grid-template-rows 650ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    margin-top 650ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  margin-top: 0px;
+  display: grid;
+  grid-template-rows: 0fr; /* keep "...you complete me!" vertically centered */
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#proposalGroup .proposal-inner {
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#completeUi.phase-line #completeLine {
+  opacity: 1;
+  transform: translateY(0px);
+}
+
+#completeUi.phase-full #completeLine,
+#completeUi.phase-full #proposalGroup {
+  opacity: 1;
+  transform: translateY(0px);
+}
+
+#completeUi.phase-full #proposalGroup {
+  margin-top: 34px; /* more space below "...you complete me!" */
+  grid-template-rows: 1fr;
+  pointer-events: auto;
+  /* Allow the "No" button to translate outside the reveal box. */
+  overflow: visible;
+}
+
+#completeUi.phase-full #proposalGroup .proposal-inner {
+  overflow: visible;
+}
+
+.actions {
+  display: flex;
+  gap: clamp(14px, 4vw, 20px);
+  margin-top: clamp(18px, 5vw, 34px); /* more space between prompt and buttons */
+}
+
+.pill {
+  font-family: "Patrick Hand", ui-rounded, system-ui, -apple-system, Segoe UI, Roboto,
+    "Helvetica Neue", Arial;
+  font-size: clamp(20px, 5.6vw, 24px);
+  line-height: 1.379;
+  padding: 14px 16px;
+  width: clamp(132px, 38vw, 160px);
+  border-radius: 70px;
+  border: 0;
+  cursor: pointer;
+}
+
+.pill.yes {
+  background: var(--yes);
+  color: var(--bg);
+}
+
+.pill.no {
+  background: var(--no);
+  color: var(--ink);
+}
+
+.pill:focus-visible {
+  outline: 3px solid rgba(0, 0, 0, 0.35);
+  outline-offset: 3px;
+}
+
+.result {
+  margin: 12px 0 0;
+  min-height: 1.5em;
+  font-size: clamp(22px, 6vw, 28px);
+}
+
+#heartsLayer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  /* float over everything (including text) */
+  z-index: 80;
+}
+
+.heart {
+  position: fixed;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity;
+  animation: heartFloat var(--dur, 1400ms) cubic-bezier(0.15, 0.85, 0.2, 1) forwards;
+  filter: drop-shadow(0px 6px 6px rgba(0, 0, 0, 0.18));
+  user-select: none;
+}
+
+@keyframes heartFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7) rotate(var(--rot0, -12deg));
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(
+        calc(-50% + var(--dx, 0px)),
+        calc(-50% - var(--dy, 520px))
+      )
+      scale(var(--scale, 1.15))
+      rotate(var(--rot1, 18deg));
+  }
+}
+
+@media (max-width: 1100px) {
+  .page {
+    /* Make mobile a true 50/50 vertical split:
+       puzzle centered in top half, text centered in bottom half. */
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    justify-items: center;
+    gap: clamp(12px, 3.5vh, 24px);
+  }
+
+  .puzzle-card,
+  .right {
+    align-self: center;
+  }
+
+  /* Don't force the right panel to be as tall as the puzzle on short screens. */
+  .right {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  body.celebrate #app .right {
+    min-height: auto;
+    height: auto;
+  }
+
+  .love-overlay {
+    font-size: clamp(24px, 6.8vw, 32px);
+    padding: 10px 14px;
+  }
+
+  #proposalGroup {
+    margin-top: 0px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile,
+  .puzzle-full {
+    transition: none !important;
+  }
+}
+

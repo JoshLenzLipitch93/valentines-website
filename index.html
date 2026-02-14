@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Valentine’s</title>
+  </head>
+  <body>
+    <main class="page" id="app">
+      <section class="puzzle-card" aria-label="Sliding tile puzzle">
+        <div class="puzzle-inner">
+          <div id="puzzle" class="puzzle-board" role="application" aria-label="Sliding tile game"></div>
+        </div>
+      </section>
+
+      <section class="right">
+        <p class="hand text-36 center" id="incompleteMsg">Dear Mariá...</p>
+
+        <div id="completeUi" hidden>
+          <p class="hand text-36 center" id="completeLine">...you complete me!</p>
+
+          <div id="proposalGroup">
+            <div class="proposal-inner">
+              <p class="hand text-36 center" id="valentinePrompt">Will you be my valentine?</p>
+
+              <div class="actions" aria-label="Valentine response">
+                <button class="pill yes" id="yesBtn" type="button">Yes</button>
+                <button class="pill no" id="noBtn" type="button">No</button>
+              </div>
+
+              <p class="hand center result" id="result" aria-live="polite"></p>
+            </div>
+          </div>
+        </div>
+
+        <div id="loveOverlay" class="love-overlay hand" hidden>
+          I’m so happy you chose me. Você é o meu chroí e o meu tudo. I love you.
+        </div>
+      </section>
+    </main>
+
+    <div id="heartsLayer" aria-hidden="true"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
+
